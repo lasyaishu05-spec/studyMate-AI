@@ -1,4 +1,10 @@
-const OpenAI = require('openai');
+const { GoogleGenAI } = require('@google/genai');
+
+function getAiClient() {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+}
 
 function generateFallbackSummary(content) {
   const clean = (content || '').trim();
@@ -13,7 +19,6 @@ function generateFallbackSummary(content) {
     return clean;
   }
 
-  // Pick leading key sentences
   return sentences.slice(0, 4).join(' ');
 }
 
@@ -65,28 +70,22 @@ async function summarizeNote(content) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey && !apiKey.includes('dummy')) {
-      const client = new OpenAI({ apiKey });
-      const response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: 'Summarize the following note in 3-4 concise sentences.' },
-          { role: 'user', content: text },
-        ],
-        temperature: 0.3,
+    const ai = getAiClient();
+    if (ai) {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Summarize the following study note in 3-4 concise sentences, highlighting the core principles and key concepts:\n\n${text}`,
       });
 
-      const summaryText = response?.choices?.[0]?.message?.content;
-      if (summaryText && summaryText.trim()) {
+      const summaryText = response.text?.trim();
+      if (summaryText) {
         return summaryText;
       }
     }
   } catch (err) {
-    console.warn(`OpenAI call failed (${err.message || err.code || err}). Using intelligent fallback summary.`);
+    console.warn(`Gemini AI call error (${err.message || err}). Using fallback summarizer.`);
   }
 
-  // Graceful fallback whenever OpenAI is unavailable, quota is exhausted, or errors occur
   return generateFallbackSummary(text);
 }
 
@@ -97,33 +96,34 @@ async function generateQuiz(content) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey && !apiKey.includes('dummy')) {
-      const client = new OpenAI({ apiKey });
-      const response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Generate 5 quiz questions (with options and answer) from the note. Return as JSON: {"questions": [{"question": "...", "options": ["..."], "answer": "..."}]}',
-          },
-          { role: 'user', content: text },
-        ],
-        temperature: 0.4,
-        response_format: { type: 'json_object' },
+    const ai = getAiClient();
+    if (ai) {
+      const prompt = `Based on the following note, generate 5 multiple choice quiz questions to test understanding.
+Return ONLY valid JSON matching this exact structure with no markdown code blocks:
+{"questions": [{"question": "Question text?", "options": ["Option A", "Option B", "Option C", "Option D"], "answer": "Option A"}]}
+
+Note content:
+${text}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
       });
 
-      const parsed = JSON.parse(response.choices[0].message.content);
+      let raw = response.text || '';
+      // Remove any markdown code fence if present
+      raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+      const parsed = JSON.parse(raw);
       const questions = parsed.questions || parsed;
       if (Array.isArray(questions) && questions.length > 0) {
         return questions;
       }
     }
   } catch (err) {
-    console.warn(`OpenAI call failed (${err.message || err.code || err}). Using intelligent fallback quiz.`);
+    console.warn(`Gemini AI quiz error (${err.message || err}). Using fallback quiz.`);
   }
 
-  // Graceful fallback whenever OpenAI is unavailable, quota is exhausted, or errors occur
   return generateFallbackQuiz(text);
 }
 
