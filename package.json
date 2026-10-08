@@ -2,10 +2,12 @@
   "name": "studymate-root",
   "version": "1.0.0",
   "scripts": {
+    "postinstall": "npm --prefix backend install",
     "build": "npm --prefix backend run build",
     "start": "npm --prefix backend start"
   },
   "dependencies": {
+    "@google/genai": "^2.28.0",
     "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
