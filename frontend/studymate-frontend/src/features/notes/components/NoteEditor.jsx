@@ -78,7 +78,12 @@ export default function NoteEditor({ note, notebookId, onSave }) {
 
       {/* AI Assistant Panel */}
       {note.id && (
-        <AIPanel notebookId={notebookId} noteId={note.id} />
+        <AIPanel
+          notebookId={notebookId}
+          noteId={note.id}
+          content={content}
+          onBeforeAi={() => onSave({ title: title || 'Untitled Note', content })}
+        />
       )}
     </div>
   );

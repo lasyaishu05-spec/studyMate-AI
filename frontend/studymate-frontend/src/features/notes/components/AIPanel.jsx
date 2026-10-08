@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { noteApi } from '../api';
 import { Sparkles, HelpCircle, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-export default function AIPanel({ notebookId, noteId }) {
+export default function AIPanel({ notebookId, noteId, content, onBeforeAi }) {
   const [summary, setSummary] = useState(null);
   const [summarizeLoading, setSummarizeLoading] = useState(false);
   const [summarizeError, setSummarizeError] = useState(null);
@@ -17,10 +17,12 @@ export default function AIPanel({ notebookId, noteId }) {
     setSummarizeLoading(true);
     setSummarizeError(null);
     try {
-      const data = await noteApi.summarize(notebookId, noteId);
+      if (onBeforeAi) await onBeforeAi();
+      const data = await noteApi.summarize(notebookId, noteId, { content });
       setSummary(data.summary);
     } catch (err) {
-      setSummarizeError('Could not generate a summary — try again.');
+      const msg = err.response?.data?.message || err.message || 'Could not generate a summary — try again.';
+      setSummarizeError(msg);
     } finally {
       setSummarizeLoading(false);
     }
@@ -31,10 +33,12 @@ export default function AIPanel({ notebookId, noteId }) {
     setQuizError(null);
     setRevealedAnswers({});
     try {
-      const data = await noteApi.quiz(notebookId, noteId);
+      if (onBeforeAi) await onBeforeAi();
+      const data = await noteApi.quiz(notebookId, noteId, { content });
       setQuizQuestions(data.questions || []);
     } catch (err) {
-      setQuizError('Could not generate a quiz — try again.');
+      const msg = err.response?.data?.message || err.message || 'Could not generate a quiz — try again.';
+      setQuizError(msg);
     } finally {
       setQuizLoading(false);
     }

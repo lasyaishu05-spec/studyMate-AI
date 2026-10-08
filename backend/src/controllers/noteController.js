@@ -36,7 +36,8 @@ async function remove(req, res, next) {
 async function summarize(req, res, next) {
   try {
     const note = await service.getNote(req.params.id, req.params.notebookId, req.user.id);
-    const summary = await aiService.summarizeNote(note.content);
+    const content = req.body?.content || note.content;
+    const summary = await aiService.summarizeNote(content);
     res.json({ summary });
   } catch (err) { next(err); }
 }
@@ -44,7 +45,9 @@ async function summarize(req, res, next) {
 async function quiz(req, res, next) {
   try {
     const note = await service.getNote(req.params.id, req.params.notebookId, req.user.id);
-    const questions = await aiService.generateQuiz(note.content);
+    const content = req.body?.content || note.content;
+    const result = await aiService.generateQuiz(content);
+    const questions = Array.isArray(result) ? result : (result?.questions || []);
     res.json({ questions });
   } catch (err) { next(err); }
 }
