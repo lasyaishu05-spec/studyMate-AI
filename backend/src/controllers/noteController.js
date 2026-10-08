@@ -1,4 +1,5 @@
 const service = require('../services/noteService');
+const aiService = require('../services/aiService');
 
 async function create(req, res, next) {
   try {
@@ -32,4 +33,22 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { create, list, get, update, remove };
+async function summarize(req, res, next) {
+  try {
+    const note = await service.getNote(req.params.id, req.params.notebookId, req.user.id);
+    const summary = await aiService.summarizeNote(note.content);
+    res.json({ summary });
+  } catch (err) { next(err); }
+}
+
+async function quiz(req, res, next) {
+  try {
+    const note = await service.getNote(req.params.id, req.params.notebookId, req.user.id);
+    const questions = await aiService.generateQuiz(note.content);
+    res.json({ questions });
+  } catch (err) { next(err); }
+}
+
+
+
+module.exports = { create, list, get, update, remove, summarize, quiz };
