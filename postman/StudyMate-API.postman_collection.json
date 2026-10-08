@@ -1,0 +1,420 @@
+{
+  "info": {
+    "name": "StudyMate API",
+    "_postman_id": "studymate-api-collection-v2",
+    "description": "Full API collection for StudyMateAI — Auth, Notebooks, Notes, AI.\n\nUsage:\n1. Import Local.postman_environment.json and select it as active environment.\n2. Run 'Auth → Login' first — the token is auto-saved to {{authToken}}.\n3. All other requests inherit Bearer auth from the collection root.\n4. Use Runner to execute the full suite top-to-bottom.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{authToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "auth": { "type": "noauth" },
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.environment.set('authToken', res.token);",
+                  "",
+                  "pm.test('Status code is 201', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Response has token', () => {",
+                  "  pm.expect(res.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('Response has user with id, name, email', () => {",
+                  "  pm.expect(res.user).to.have.all.keys('id', 'name', 'email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"pass1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/signup", "host": ["{{baseUrl}}"], "path": ["auth", "signup"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.environment.set('authToken', res.token);",
+                  "",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has token', () => {",
+                  "  pm.expect(res.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.test('Response has user with id, name, email', () => {",
+                  "  pm.expect(res.user).to.have.all.keys('id', 'name', 'email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"pass1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notebooks",
+      "item": [
+        {
+          "name": "Create Notebook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.environment.set('notebookId', res.id);",
+                  "",
+                  "pm.test('Status code is 201', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Response has expected shape', () => {",
+                  "  pm.expect(res).to.have.property('id');",
+                  "  pm.expect(res).to.have.property('title');",
+                  "  pm.expect(res).to.have.property('userId');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"My Study Notebook\"\n}" },
+            "url": { "raw": "{{baseUrl}}/notebooks", "host": ["{{baseUrl}}"], "path": ["notebooks"] }
+          }
+        },
+        {
+          "name": "List Notebooks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is an array', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notebooks", "host": ["{{baseUrl}}"], "path": ["notebooks"] }
+          }
+        },
+        {
+          "name": "Rename Notebook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Title was updated', () => {",
+                  "  pm.expect(res.title).to.eql('Renamed Notebook');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Renamed Notebook\"\n}" },
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}"] }
+          }
+        },
+        {
+          "name": "[Isolation] User B cannot access User A notebook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 or 404 (no access)', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "invalid_token_simulating_user_b", "type": "string" }] },
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}"] }
+          }
+        },
+        {
+          "name": "Delete Notebook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', () => {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "Create Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) pm.environment.set('noteId', res.id);",
+                  "",
+                  "pm.test('Status code is 201', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Response has expected shape', () => {",
+                  "  pm.expect(res).to.have.property('id');",
+                  "  pm.expect(res).to.have.property('title');",
+                  "  pm.expect(res).to.have.property('content');",
+                  "  pm.expect(res).to.have.property('notebookId');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Intro to Neural Networks\",\n  \"content\": \"Neural networks are computing systems loosely inspired by biological neural networks. They consist of layers of interconnected nodes or neurons that process information using connectionist approaches to computation. Each connection can transmit a signal from one neuron to another, and the receiving neuron processes the signal and signals downstream neurons.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes"] }
+          }
+        },
+        {
+          "name": "List Notes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is an array', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes"] }
+          }
+        },
+        {
+          "name": "Get Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has expected shape', () => {",
+                  "  pm.expect(res).to.have.property('id');",
+                  "  pm.expect(res).to.have.property('title');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}"] }
+          }
+        },
+        {
+          "name": "Update Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Title was updated', () => {",
+                  "  pm.expect(res.title).to.eql('Updated Note Title');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated Note Title\",\n  \"content\": \"Updated content for testing.\"\n}" },
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}"] }
+          }
+        },
+        {
+          "name": "[Isolation] User B cannot access User A note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 or 404 (no access)', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([401, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "invalid_token_simulating_user_b", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}"] }
+          }
+        },
+        {
+          "name": "Delete Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', () => {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Summarize Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Has summary string', () => {",
+                  "  pm.expect(res.summary).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}/summarize", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}", "summarize"] }
+          }
+        },
+        {
+          "name": "Generate Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status code is 200', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Has questions property', () => {",
+                  "  pm.expect(res).to.have.property('questions');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/notebooks/{{notebookId}}/notes/{{noteId}}/quiz", "host": ["{{baseUrl}}"], "path": ["notebooks", "{{notebookId}}", "notes", "{{noteId}}", "quiz"] }
+          }
+        }
+      ]
+    }
+  ]
+}
