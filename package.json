@@ -1,6 +1,12 @@
 {
+  "name": "studymate-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm --prefix backend run build",
+    "start": "npm --prefix backend start"
+  },
   "dependencies": {
-    "@prisma/client": "^7.10.0",
+    "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.6",
@@ -13,9 +19,6 @@
   "devDependencies": {
     "@playwright/test": "^1.64.0",
     "nodemon": "^3.1.14",
-    "prisma": "^8.0.0-rc.21"
-  },
-  "scripts": {
-    "postinstall": "prisma skills sync || exit 0"
+    "prisma": "^5.22.0"
   }
 }
