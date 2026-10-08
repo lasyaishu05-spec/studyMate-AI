@@ -2,6 +2,7 @@
   "name": "studymate-root",
   "version": "1.0.0",
   "scripts": {
+    "dev": "npm --prefix backend run dev",
     "postinstall": "npm --prefix backend install",
     "build": "npm --prefix backend run build",
     "start": "npm --prefix backend start"
